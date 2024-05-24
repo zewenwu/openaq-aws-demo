@@ -1,0 +1,17 @@
+### Connectors
+boto3
+
+### Lambda container
+awslambdaric
+
+### Data Manipulation
+pandas
+numpy
+
+### Plots
+matplotlib
+seaborn
+scipy
+cartopy
+geopandas
+folium

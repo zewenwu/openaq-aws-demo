@@ -1,0 +1,6 @@
+### Connectors
+boto3
+requests
+
+### Lambda container
+awslambdaric

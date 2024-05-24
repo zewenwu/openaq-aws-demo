@@ -1,0 +1,117 @@
+name: CI/CD Lambda Code
+
+on: [push]
+
+jobs:
+  ci-lambda-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+      - name: Set up Linting environment via Conda
+        run: |
+          cd src/application
+          make setup-lint
+      - name: Lint with Black/Flake8/ISort
+        run: |
+          cd src/application
+          make lint
+
+  cd-lambda-code:
+    needs: ci-lambda-code
+    runs-on: ubuntu-latest
+    # if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        # To compare changes between the current commit and the last pushed remote commit set `since_last_remote_commit: true`. e.g
+        # with:
+        #   since_last_remote_commit: true 
+      - name: List all changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+      - name: Configure AWS Credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set aws_session_token ${{ secrets.AWS_SESSION_TOKEN }}
+          aws configure set default.region ${{ secrets.AWS_REGION }}
+      - name: Deploy all Lambda code in lambda/ subfolders
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+          DEPLOY_CONFIG_FILE_NAME: deploy-config.yml
+        run: |
+          for dir in src/application/lambda/*/
+          do
+            echo "======================="
+            ### Checks for the deployment config file and changes in the Lambda directory
+            dir=${dir%*/}
+            # Check if there a deployment config file in the current directory
+            if [ ! -f "$dir/$DEPLOY_CONFIG_FILE_NAME" ]; then
+              echo "UPDATE FOLDER $dir: No $DEPLOY_CONFIG_FILE_NAME found. Skipping..."
+              continue
+            fi
+
+            # Check if 'enabled' key is true
+            DEPLOY_ENABLED=$(yq e '.cd-deploy.enabled' "$dir/$DEPLOY_CONFIG_FILE_NAME")
+            if [ "$DEPLOY_ENABLED" != "true" ]; then
+              echo "UPDATE FOLDER $dir: 'enabled' key in $DEPLOY_CONFIG_FILE_NAME is not true. Skipping..."
+              continue
+            fi
+
+            # Check if 'always-deploy' key is true
+            ALWAYS_DEPLOY=$(yq e '.cd-deploy.always-deploy' "$dir/$DEPLOY_CONFIG_FILE_NAME")
+            if [ "$ALWAYS_DEPLOY" == "true" ]; then
+              echo "UPDATE FOLDER $dir: 'always-deploy' key in $DEPLOY_CONFIG_FILE_NAME is true."
+            else
+              # Check if there are changes in the current Lambda directory
+              changes_detected=false
+              for file in ${ALL_CHANGED_FILES[@]}; do
+                if [[ "$file" == "$dir"* ]]; then
+                  changes_detected=true
+                  break
+                fi
+              done
+
+              if [ "$changes_detected" = false ]; then
+                echo "UPDATE FOLDER $dir: No file changes detected. Skipping..."
+                continue
+              else
+                echo "UPDATE FOLDER $dir: Changes detected."
+              fi
+            fi
+
+            ### Docker build and push to ECR
+            cd $dir
+            ecr_repo_name=$(yq e '.cd-deploy.ecr-repo-name' "./$DEPLOY_CONFIG_FILE_NAME")
+            lambda_name=$(yq e '.cd-deploy.lambda-name' "./$DEPLOY_CONFIG_FILE_NAME")
+            echo "Build Lambda image and push to ECR repository for Lambda: $lambda_name..."
+
+            # Build the Docker image
+            docker build --platform linux/amd64 -t lambda:test . --no-cache
+
+            # Get the ECR repository URL
+            ECR_URL=$(aws ecr describe-repositories --repository-names $ecr_repo_name --query 'repositories[0].repositoryUri' --output text)
+
+            # Authenticate and Push to the ECR repository
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_URL
+            docker tag lambda:test $ECR_URL:latest
+            docker push $ECR_URL:latest
+
+            ### Update the Lambda function with the new Docker image
+            aws lambda update-function-code --function-name $lambda_name --image-uri $ECR_URL:latest
+
+            ### Return to the root repository directory
+            cd ../../../..
+          done

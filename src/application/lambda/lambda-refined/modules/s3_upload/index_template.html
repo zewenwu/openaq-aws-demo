@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+        <style>
+            .table-container {{
+                margin-top: 20px;
+            }}
+            .image-container {{
+                display: block;
+                width: 100%;
+                margin : 0;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            {images}
+            <div class="table-container">
+                <h2>Sum of all the average pollutant molecules measured between {from_time} and {to_time} UTC</h2>
+                {df_sum_parameters_html}
+            </div>
+            <div class="table-container">
+                <h2>Average of pollutant molecules measured between {from_time} and {to_time} UTC</h2>
+                {df_avg_value_parameters_html}
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,6 @@
+cd-deploy:
+  enabled: true
+  always-deploy: false
+  lambda-name: lambda-clean
+  ecr-repo-name: lambda-clean
+  aws-region: us-east-1
