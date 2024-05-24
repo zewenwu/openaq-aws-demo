@@ -38,7 +38,7 @@ terraform.rc
 .DS_Store
 
 # Data
-# data/
+data/
 
 # Ignore pycache
 __pycache__/
