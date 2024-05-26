@@ -1,4 +1,4 @@
-# OpenAQ DEMO: AWS Data Streaming Platform for Live Air Quality Measurements in Belgium
+# OpenAQ DEMO: AWS Serverless Data Streaming Platform for Measuring Live Air Quality in Belgium
 
 ## Introduction
 
@@ -11,7 +11,14 @@ This repository contains a live streaming DEMO solution architecture and Python 
 
 We used Amazon Lambda functions to ingest and process streaming data live from the OpenAQ API. The final refined data and visualisarions are stored in Amazon S3 and hosted as a public static website. The static website are several HTML pages that displays the latest air quality data measured in Belgium from the OpenAQ API.
 
-### Terraform Blueprints/Components
+The following sections describe:
+- **Terraform Blueprints/Components**: Our Terraform automation templates to deploy the solution architecture.
+- **GitHub Action CI/CD Lambda Pipeline**: Our GitHub Actions CI/CD pipeline to deploy Lambda functions to AWS.
+- **Tutorial**: Step-by-step guide to deploy the solution architecture using Terraform and GitHub Actions CI/CD pipeline.
+- **Cost Estimation**: Cost estimation of the solution architecture using Infracost.
+- **Troubleshooting**: Common issues and resolutions during the deployment of the solution architecture.
+
+## Terraform Blueprints/Components
 
 We use Terraform to automatically deploy the solution architecture. The Terraform blueprints are located in the `src/platform/live-sandbox` folder. **The Terraform blueprints are Terraform use-case specific files that references Terraform components.** For our use case, we are defining Terraform blueprints to deploy a end-to-end solution architecture for Ingesting, processing, and visualizing streaming data from OpenAQ API.
 
@@ -132,6 +139,28 @@ terraform destroy
 ```
 
 Confirm the Terraform resources to destroy in your AWS account, confirm by typing `yes` in the Terminal.
+
+## Cost Estimation
+
+The cost estimation of the solution architecture is based on the AWS services used in the solution architecture. The cost estimation is based using **Infracost**, a cost estimation tool that estimates the cost of Terraform resources before deployment.
+
+To estimate the cost of the solution architecture before deployment, follow the below steps:
+
+**Step 1.** Install Infracost and obtain an API key by following the instructions in the [Infracost documentation](https://www.infracost.io/docs/).
+
+**Step 2.** Change directory to `live-sandbox` that contains Terraform blueprints. Run the below command to estimate the cost of the solution architecture:
+
+```bash
+cd src/platform/live-sandbox
+infracost breakdown --show-skipped --usage-file infracost-usage.yml --path .
+```
+
+> **Remark**: The command uses the `infracost-usage.yml` file to estimate the usage costs of the solution architecture, which has been estimated carefully, but not guaranteed to be accurate.
+
+The cost estimation of the solution architecture is displayed in the Terminal:
+
+![alt text](./img/infracost-example.png)
+
 
 ## Troubleshooting
 

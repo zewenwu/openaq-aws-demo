@@ -1,0 +1,27 @@
+version: 0.1
+resource_type_default_usage:
+  aws_cloudwatch_log_group:
+    storage_gb: 10 # Total data stored by CloudWatch logs in GB.
+    monthly_data_ingested_gb: 1 # Monthly data ingested by CloudWatch logs in GB.
+    monthly_data_scanned_gb: 2 # Monthly data scanned by CloudWatch logs insights in GB.
+  aws_dynamodb_table:
+    storage_gb: 2 # Total storage for tables in GB.
+    pitr_backup_storage_gb: 0 # Total storage for Point-In-Time Recovery (PITR) backups in GB.
+    on_demand_backup_storage_gb: 0 # Total storage for on-demand backups in GB.
+    monthly_data_restored_gb: 0 # Monthly size of restored data in GB.
+    monthly_streams_read_request_units: 0 # Monthly streams read request units.
+  aws_ecr_repository:
+    storage_gb: 5 # Total size of ECR repository in GB.
+  aws_lambda_function:
+    monthly_requests: 10000 # Monthly requests to the Lambda function.
+    request_duration_ms: 25 # Average duration of each request in milliseconds.
+  aws_s3_bucket:
+    object_tags: 100000 # Total object tags. Only for AWS provider V3.
+    standard: # Usages of S3 Standard:
+      storage_gb: 10 # Total storage in GB.
+      monthly_tier_1_requests: 10000 # Monthly PUT, COPY, POST, LIST requests (Tier 1).
+      monthly_tier_2_requests: 10000 # Monthly GET, SELECT, and all other requests (Tier 2).
+      monthly_select_data_scanned_gb: 10 # Monthly data scanned by S3 Select in GB.
+      monthly_select_data_returned_gb: 10 # Monthly data returned by S3 Select in GB.
+  aws_secretsmanager_secret:
+    monthly_requests: 10000 # Monthly API requests to Secrets Manager.

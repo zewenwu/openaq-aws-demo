@@ -76,7 +76,7 @@ module "refined_lambda" {
     "DYNAMODB_TABLE_NAME" = module.clean_table.table_name
     "S3_BUCKET_NAME"      = module.refined_bucket.bucket_name
     "REGION_NAME"         = data.aws_region.active.name
-    "QUERY_HOURS"         = "12"
+    "QUERY_HOURS"         = "6"
   }
 
   secrets = {}

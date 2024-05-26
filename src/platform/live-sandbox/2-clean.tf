@@ -67,7 +67,7 @@ module "clean_table" {
   billing_mode_info = {
     mode           = "PROVISIONED"
     read_capacity  = 20
-    write_capacity = 20
+    write_capacity = 10
   }
 
   allowed_actions = [
